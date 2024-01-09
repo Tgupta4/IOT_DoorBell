@@ -5,7 +5,7 @@
 from findFace import *
 from uploadToCloudinary import UploadPhoto
 from sendMessage import sendSMS
-# import requests
+import requests
 import time
 url_on = "http://192.168.1.127/light/kauf_bulb/turn_on"
 url_off = "http://192.168.1.127/light/kauf_bulb/turn_off"
@@ -40,5 +40,5 @@ while True:
     print(message)
     #
     # sendSMS(message,phone number)
-    sendSMS(message)
+    sendSMS(message,0000000000)
 print('*****************************EXIT********************************')

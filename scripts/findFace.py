@@ -14,10 +14,10 @@ recognizer = cv2.face.LBPHFaceRecognizer_create()
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 # Create Data set
-path = 'scripts/faceData'
+path = 'scripts/FaceData'
 
 # [0,1,2,3,4,5,6]
-KNOWN_FACES = ["", "Daisy", "Tanish","md","ad"]
+KNOWN_FACES = ["",""]
 # if os.path.exists("test"):
 #     os.remove("test")
 
@@ -139,7 +139,7 @@ FaceAnswer = {
 max_conf=0
 def Capture_Face():
     # Initialize real-time video capture
-    filename = 'face\IMG-'+str(datetime.datetime.now().microsecond)+'.jpg'
+    filename = 'face/IMG-'+str(datetime.datetime.now().microsecond)+'.jpg'
     cam = cv2.VideoCapture(0)
     cam.set(3, 640)  # set video-width
     cam.set(4, 480)  # set video-height

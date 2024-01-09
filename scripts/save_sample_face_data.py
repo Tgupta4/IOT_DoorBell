@@ -14,39 +14,6 @@ FACE_DATA_PATH="faceData/person2/"
 # # gets all the directories in training_data folder
 # directories = os.listdir(path)
 
-# faces = [] # [[],parson2,person1]
-# labels = [] #[1,10101102,1]
-# #recognize face from image
-# recognizer = cv2.face.LBPHFaceRecognizer_create()
-# for directory_name in directories:
-#     # our subject directories start with letter 'person' so
-#     # ignore any non-relevant directories if any
-#     if directory_name.startswith("person"):
-#         label = int(directory_name.replace("person", ""))
-#         print('I am working')
-#         # to build the path of directory containing images like "facedata/person1"
-#         subject_directory_path = path + "/" + directory_name
-#         # Get images names using os.listdir (user1,user2 so on)
-#         subject_images_names = os.listdir(subject_directory_path)
-#         for image_name in subject_images_names:
-#             # to avoid unwanted files
-#             if not image_name.startswith("."):
-#                 photo_path = subject_directory_path + "/" + image_name
-#                 PIL_img = Image.open(photo_path).convert('L') # to read image grayscale
-#                 img_numpy = np.array(PIL_img,'uint8')
-#                 faces__ = faceCascade.detectMultiScale(img_numpy)
-#                 # id = int(os.path.split(imagePath)[-1].split(".")[1])
-#                 for (x,y,w,h) in faces__:
-#                     print('....')
-#                     faces.append(img_numpy[y:y+h,x:x+w])
-#                     labels.append(label)
-
-# recognizer.train(faces, np.array(labels))
-# recognizer.write('trainer/trainer.yml') 
-
-# print('..DONE..')
-# # print(labels)
-
 
 # # Dataset ends here
 
