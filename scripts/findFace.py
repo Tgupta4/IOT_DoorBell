@@ -3,6 +3,15 @@ import os
 import numpy as np
 import datetime
 from PIL import Image
+from picamera2 import Picamera2, Preview
+import time
+
+
+picam2 = Picamera2()
+# camera_config = picam2.create_still_configuration(main={"size": (1920, 1080)}, lores={"size": (640, 480)}, display="lores")
+picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (640, 480)}))
+# picam2.configure(camera_config)
+picam2.start()
 
 cascPath = "scripts/haarcascade_frontalface_default.xml"
 faceCascade = cv2.CascadeClassifier(cascPath)
@@ -14,10 +23,10 @@ recognizer = cv2.face.LBPHFaceRecognizer_create()
 font = cv2.FONT_HERSHEY_SIMPLEX
 
 # Create Data set
-path = 'scripts/FaceData'
+path = 'scripts/faceData'
 
 # [0,1,2,3,4,5,6]
-KNOWN_FACES = ["",""]
+KNOWN_FACES = ["", "Daisy", "Tanish","md","ad"]
 # if os.path.exists("test"):
 #     os.remove("test")
 
@@ -119,14 +128,18 @@ def find_Face_Name(img):
 
     return canSave
 
+# # Preperation Start ####
 
-print("Preparing data...")
+# print("Preparing data...")
 faces, labels = prepare_training_data(path)
 print("Data prepared")
 # create our LBPH face recognizer
 recognizer.train(faces, np.array(labels))
 recognizer.write('scripts/trainer/trainer.yml') 
 print("Total faces: & labels ", len(faces),len(labels))
+# Preperation Done ####
+
+
 print("Traing modal done...")
 FaceAnswer = {
     "not": 0,
@@ -139,10 +152,12 @@ FaceAnswer = {
 max_conf=0
 def Capture_Face():
     # Initialize real-time video capture
-    filename = 'face/IMG-'+str(datetime.datetime.now().microsecond)+'.jpg'
-    cam = cv2.VideoCapture(0)
-    cam.set(3, 640)  # set video-width
-    cam.set(4, 480)  # set video-height
+    filename = 'face\IMG-'+str(datetime.datetime.now().microsecond)+'.jpg'
+    # cam = cv2.VideoCapture(0)
+    # cam.set(3, 640)  # set video-width
+    # cam.set(4, 480)  # set video-height
+ 
+    
     count_photo_before_exit = 0
     FaceAnswer['not'] = 0
     FaceAnswer['yes']['len'] = 0
@@ -151,12 +166,39 @@ def Capture_Face():
         count_photo_before_exit += 1
         if(count_photo_before_exit > 100):
             break
-        ret, img = cam.read()
+        print("A11")
+        # # picam2.start_preview(Preview.QTGL)
+        # # print("A12") 
+        # # picam2.start()
+        # # print("A13") 
+        # # time.sleep(2)
+        # # print("A14")
+        # # fileLocation="check.jpg"
+        # # print("A15")
+        # # picam2.capture_file(fileLocation)
+        # # print("A16")
+        # # picam2.stop_preview()
+        # # print("A17")
+        # # picam2.stop()
+        # # print("A18")
+        # # time.sleep(2)
+        # # print("Image is captured")
+        # # exit()
+        # img = cv2.imread(fileLocation)
+        img = picam2.capture_array()
+        # img = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+
+        # ret, img = cam.read()
         print("Below image form camera")
-        print(img)
+        # cv2.imwrite(filename, img)
+        # k = cv2.waitKey(50) & 0xff
+
+        # exit()
+        # print(img)
         if(img is None):
             print("Unable to read image form camera")
-            break
+            exit()
+        #     break
         canSave = find_Face_Name(img) or False
         if(canSave):
             notSaved = False
@@ -166,10 +208,21 @@ def Capture_Face():
             break
     print(">> is-saved",not(notSaved))
     if(notSaved):
-        ret, img = cam.read()
-        cv2.imwrite(filename, img)
+        im = picam2.capture_array()
+        img = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+        # # ret, img = cam.read()
+        # picam2.start_preview(Preview.QTGL)
+        # picam2.start()
+        # time.sleep(2)
+        # fileLocation="check.jpg"
+        # picam2.capture_file(fileLocation)
+        # img = cv2.imread(fileLocation)
+        if (img is None):
+            print("Unable to read image form camera")
+        else: 
+            cv2.imwrite(filename, img)
     print("I am Cleaning up now",filename)
-    cam.release()
+    # cam.release()
     cv2.destroyAllWindows()
     if(FaceAnswer['not'] > FaceAnswer['yes']['len']):
         return [filename, False]
