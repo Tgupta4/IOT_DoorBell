@@ -65,6 +65,7 @@ while True:
     if(username):
         name=username
         message += username
+        # This mssge1 sent to mobile app only
         mssge1 = f"Hello, There is {username} at the door."
         # Add name to grant the access
         ACCESS_GRANTED_LIST=['Tanish','CCC','AAA']
