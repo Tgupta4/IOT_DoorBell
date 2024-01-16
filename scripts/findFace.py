@@ -5,6 +5,22 @@ import datetime
 from PIL import Image
 from picamera2 import Picamera2, Preview
 import time
+# from __future__ import print_function
+import requests
+import json
+import cv2
+from credentials import server_IP_address
+from credentials import send_image_to_server
+# server IP and port
+
+# folder name in faceData:-  person[0,1,2,3,4,5,6]
+KNOWN_FACES = ["","Tanish","XYZ"]
+
+test_url = server_IP_address+'/api/test'
+
+# prepare headers for http request
+content_type = 'image/jpeg'
+headers = {'content-type': content_type}
 
 
 picam2 = Picamera2()
@@ -25,8 +41,8 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 # Create Data set
 path = 'scripts/faceData'
 
-# [0,1,2,3,4,5,6]
-KNOWN_FACES = ["", "Daisy", "Tanish","md","ad"]
+
+# keep first name blank its for person0 folder which is not there 
 # if os.path.exists("test"):
 #     os.remove("test")
 
@@ -92,6 +108,8 @@ def find_Face_Name(img):
     canSave = False
     # image in laptops is flipped automatically
     img = cv2.flip(img, 1, 0)
+
+        
     gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces__coordinaes = faceCascade.detectMultiScale(
         gray_image,     
@@ -101,25 +119,24 @@ def find_Face_Name(img):
     )
     
     for(x, y, w, h) in faces__coordinaes:
-        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-        id, confidence = recognizer.predict(gray_image[y:y+h, x:x+w])
         canSave = True
-        # If confidence is less them 100 ==> "0" : perfect match 
-        print(confidence)
-        
-        if (confidence < 60):
-            id = KNOWN_FACES[id]
-            FaceAnswer['yes']['name'] = id
-            FaceAnswer['yes']['len'] += 1
-            confidence = " {0}%".format(round(100-confidence))
-
-        else:
-            FaceAnswer['not'] += 1
-            id = "I Don't Know You"
-            confidence = " {0}%".format(round(100-confidence))
-        print(confidence + "::"+ id)
-        cv2.putText(img, str(id), (x+5,y-5), font, 1, (255,255,255), 2)
-        cv2.putText(img, str(confidence), (x+5,y+h-5), font, 1, (255,255,0), 1)  
+        cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
+        if(send_image_to_server is False):
+            id, confidence = recognizer.predict(gray_image[y:y+h, x:x+w])
+            # If confidence is less them 100 ==> "0" : perfect match 
+            print(confidence)
+            if (confidence < 60): # 60 is 40% or more, 80% 20% or more match
+                id = KNOWN_FACES[id]
+                FaceAnswer['yes']['name'] = id
+                FaceAnswer['yes']['len'] += 1
+                confidence = " {0}%".format(round(100-confidence))
+            else:
+                FaceAnswer['not'] += 1
+                id = "I Don't Know You"
+                confidence = " {0}%".format(round(100-confidence))
+            print(confidence + "::"+ id)
+            cv2.putText(img, str(id), (x+5,y-5), font, 1, (255,255,255), 2)
+            cv2.putText(img, str(confidence), (x+5,y+h-5), font, 1, (255,255,0), 1)  
 
     window_name='Capturing Image::'
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -129,18 +146,18 @@ def find_Face_Name(img):
     return canSave
 
 # # Preperation Start ####
+if(send_image_to_server is False):
+    # print("Preparing data...")
+    faces, labels = prepare_training_data(path)
+    print("Data prepared")
+    # create our LBPH face recognizer
+    recognizer.train(faces, np.array(labels))
+    recognizer.write('scripts/trainer/trainer.yml') 
+    print("Total faces: & labels ", len(faces),len(labels))
+    # Preperation Done ####
 
-# print("Preparing data...")
-faces, labels = prepare_training_data(path)
-print("Data prepared")
-# create our LBPH face recognizer
-recognizer.train(faces, np.array(labels))
-recognizer.write('scripts/trainer/trainer.yml') 
-print("Total faces: & labels ", len(faces),len(labels))
-# Preperation Done ####
 
-
-print("Traing modal done...")
+    print("Traing modal done...")
 FaceAnswer = {
     "not": 0,
     "yes": {
@@ -152,7 +169,7 @@ FaceAnswer = {
 max_conf=0
 def Capture_Face():
     # Initialize real-time video capture
-    filename = 'face\IMG-'+str(datetime.datetime.now().microsecond)+'.jpg'
+    filename = 'face/IMG-'+str(datetime.datetime.now().microsecond)+'.jpg'
     # cam = cv2.VideoCapture(0)
     # cam.set(3, 640)  # set video-width
     # cam.set(4, 480)  # set video-height
@@ -168,20 +185,6 @@ def Capture_Face():
             break
         print("A11")
         # # picam2.start_preview(Preview.QTGL)
-        # # print("A12") 
-        # # picam2.start()
-        # # print("A13") 
-        # # time.sleep(2)
-        # # print("A14")
-        # # fileLocation="check.jpg"
-        # # print("A15")
-        # # picam2.capture_file(fileLocation)
-        # # print("A16")
-        # # picam2.stop_preview()
-        # # print("A17")
-        # # picam2.stop()
-        # # print("A18")
-        # # time.sleep(2)
         # # print("Image is captured")
         # # exit()
         # img = cv2.imread(fileLocation)
@@ -210,17 +213,28 @@ def Capture_Face():
     if(notSaved):
         im = picam2.capture_array()
         img = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
-        # # ret, img = cam.read()
-        # picam2.start_preview(Preview.QTGL)
-        # picam2.start()
-        # time.sleep(2)
-        # fileLocation="check.jpg"
-        # picam2.capture_file(fileLocation)
-        # img = cv2.imread(fileLocation)
         if (img is None):
             print("Unable to read image form camera")
         else: 
             cv2.imwrite(filename, img)
+    
+    if(send_image_to_server):
+        # encode image as jpeg
+        _, img_encoded = cv2.imencode('.jpg', img)
+        print("Here will send image to server")
+        # send http request with image and receive response
+        response = requests.post(test_url, data=img_encoded.tostring(), headers=headers)
+        # decode response
+        print("This is response from server starts")
+        response_data=json.loads(response.text)
+        print(response_data)
+        print("This is response from server ends")
+        username=response_data["username"]
+        print(username)
+        if(username):
+            cv2.destroyAllWindows()
+            return [filename, username]
+
     print("I am Cleaning up now",filename)
     # cam.release()
     cv2.destroyAllWindows()

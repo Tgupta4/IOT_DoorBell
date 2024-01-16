@@ -1,6 +1,3 @@
-
-# 1. save photo with name using opencv
-# 2. upload photo to server
 import subprocess
 from findFace import *
 from uploadToCloudinary import UploadPhoto
@@ -9,6 +6,9 @@ import requests
 import time
 import socket
 import pyttsx3
+from credentials import buld_on_ip
+from credentials import android_ip
+from credentials import android_port
 
 # Initialize the Pyttsx3 engine
 engine = pyttsx3.init()
@@ -28,14 +28,10 @@ def send_command(host, port, command):
     else:
         print(f"No Host Present: Sent command: {command}")
 
-# Replace with the IP address of your Android device    
-android_ip = '192.168.106.163'  # False or ip of android device to recieve message on android app
-# Should match the port in your Android app`
-port = 49100  # if app message not arrived use 49162 port number 
 
 # change ip of kauf bulb for visual alert
-url_on = "http://192.168.1.127/light/kauf_bulb/turn_on"
-url_off = "http://192.168.1.127/light/kauf_bulb/turn_off"
+url_on = buld_on_ip+"light/kauf_bulb/turn_on"
+url_off = buld_on_ip+"light/kauf_bulb/turn_off"
 
 print('*****************************START*******************************')
 
@@ -65,11 +61,9 @@ while True:
     if(username):
         name=username
         message += username
-        # This mssge1 sent to mobile app only
         mssge1 = f"Hello, There is {username} at the door."
         # Add name to grant the access
         ACCESS_GRANTED_LIST=['Tanish','CCC','AAA']
-        trigger_blub()
         if any(i in name for i in ACCESS_GRANTED_LIST):
             message += "\n Access Granted... Door Unlocked"
     else:
@@ -82,8 +76,9 @@ while True:
 
     print(message)
     command_to_send = mssge1
-    send_command(android_ip, port, command_to_send)
+    send_command(android_ip, android_port, command_to_send)
     sendSMS(message)
+    trigger_blub()
     engine.say(message)
     # Wait for the speech to finish
     engine.runAndWait()
